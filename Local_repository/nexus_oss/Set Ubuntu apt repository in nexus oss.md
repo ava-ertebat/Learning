@@ -41,4 +41,4 @@ sudo chmod a+r /usr/share/keyrings/kubernetes-archive-keyring.gpg
 sudo apt update
 ```
 
-6: ##enjoy
+6: ## enjoy
