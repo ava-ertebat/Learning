@@ -78,9 +78,8 @@ server {
 
 }
 
-
-
 ```
+
 Step 3. Site activation:
 Now we need to enable this configuration by creating a symbolic link in sites-enabled:
 
