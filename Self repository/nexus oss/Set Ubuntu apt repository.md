@@ -2,7 +2,8 @@ How to Set Ubuntu apt repository in nexus oss
 
 1:open the sources.list
 sudo nano /etc/apt/sources.list
-==============================================================================================================================================================================
+
+```
 2:set this address
 deb [trusted=yes] https://registry.nichosting.ir/repository/apt_ubuntu_local/ jammy main
 deb [trusted=yes] https://registry.nichosting.ir/repository/ubuntu_jammy_main_restricted jammy main restricted
@@ -99,10 +100,9 @@ deb http://security.ubuntu.com/ubuntu jammy-security universe
 # deb-src http://security.ubuntu.com/ubuntu jammy-security universe
 deb http://security.ubuntu.com/ubuntu jammy-security multiverse
 # deb-src http://security.ubuntu.com/ubuntu jammy-security multiverse
+```
 
 
-
-==============================================================================================================================================================================
 3:get Certificate
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
 curl -fsSLo kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
