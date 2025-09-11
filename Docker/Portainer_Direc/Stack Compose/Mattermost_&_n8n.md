@@ -75,3 +75,33 @@ configs:
     content: |
       CREATE DATABASE sazehertebat_n8n_db;
 ```
+# Edit Config File:
+ - Find Container Name With ` sudo docker ps `
+ - Copy config File And Edit in ```Host```
+ - Move config File on Host To Container
+ - Find Container Volume Name With  `sudo docker volume ls`
+Step 1:
+Find Container Name
+
+```
+sudo docker ps
+```
+Step 2:Copy config File And Edit in Host
+```
+sudo docker cp mattermost-app:/mattermost/config/config.json ./config.json
+```
+In this Case My Container Name is `mattermost-app`
+Step 3:Edit With Editor Like `nano`
+```
+sudo nano ./config.json
+```
+Step 4:Move config File on Host To Container
+```
+sudo docker cp ./config.json mattermost-app:/mattermost/config/config.json
+```
+Step 5:
+Find Container Volume Name
+```
+sudo docker run --rm -v mattermost_mattermost_config:/mattermost/config alpine sh -c "chown -R 2000:2000 /mattermost/config && chmod -R 700 /mattermost/config && chmod -R 644 /mattermost/config/*"
+```
+In this Case My Container Volume Name is `mattermost_mattermost_config`
