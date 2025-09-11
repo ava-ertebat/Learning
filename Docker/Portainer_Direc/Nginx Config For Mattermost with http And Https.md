@@ -1,5 +1,6 @@
 # Nginx Config For Mattermost with http And Https
 
+## Staig1:
 Step 1: Preparing and Configuring Nginx
 On Ubuntu, Nginx uses a very nice structure by default for managing multiple sites:
 
@@ -11,7 +12,7 @@ This method allows us to easily enable or disable sites without deleting the mai
 
 First, let's make sure that the main Nginx file (nginx.conf) is configured to read configurations from the sites-enabled directory. This is done by default, but to be sure, run the following command:
 
-1:First, we'll create a new file in the sites-available directory with the name of our subdomain. This will help keep the files organized.
+Step 1:First, we'll create a new file in the sites-available directory with the name of our subdomain. This will help keep the files organized.
 ```
 sudo nano /etc/nginx/sites-available/chat.avacore.ir
 
@@ -80,52 +81,52 @@ server {
 
 
 ```
-3. Site activation:
+Step 3. Site activation:
 Now we need to enable this configuration by creating a symbolic link in sites-enabled:
 
 ```
 sudo ln -s /etc/nginx/sites-available/chat.avacore.ir /etc/nginx/sites-enabled/
-
 ```
-4. Test and Apply the Configuration:
+
+Step 4. Test and Apply the Configuration:
 
 Before finalizing, it is always best to test the Nginx configuration to ensure there are no errors:
 
 ```
 sudo nginx -t
-
 ```
-5.If you see the output syntax is ok and test is successful, it means everything is correct. Now apply the settings with the following command:
+
+Step 5.If you see the output syntax is ok and test is successful, it means everything is correct. Now apply the settings with the following command:
 
 ```
 sudo systemctl reload nginx
 
 ```
 
-6.It's time to test!
+Step 6.It's time to test!
 Now open your browser and go to http://chat.avacore.ir. Do you see the Mattermost page? (You may be redirected to HTTPS due to Mattermost settings, which is giving an error for now, this is normal. The important thing is to know that the initial connection has been established.)
 
 I'm waiting for your result.
 
-7.Step 3: Secure with SSL/TLS (HTTPS)
+## Staig 2
+Secure with SSL/TLS (HTTPS)
 In this step, we will use a tool called Certbot to automatically obtain a free SSL certificate from Let's Encrypt and install it on Nginx. This will encrypt all traffic between your users and your server.
 
-1. Install Certbot:
+Step 1. Install Certbot:
 
 First, we will install Certbot and its Nginx plugin with the following commands. This plugin allows Certbot to automatically read and modify your Nginx configuration files.
 
 ```
 sudo apt update
 sudo apt install certbot python3-certbot-nginx -y
-
 ```
-2. Obtain and install an SSL certificate:
+
+Step 2. Obtain and install an SSL certificate:
 
 Now we run the main command. This command tells Certbot to issue a certificate for the domain chat.avacore.ir using the Nginx plugin:
 
 ```
 sudo certbot --nginx -d chat.avacore.ir
-
 ```
 
 What will happen?
