@@ -93,7 +93,7 @@ sudo docker cp mattermost-app:/mattermost/config/config.json ./config.json
 ```
 In this Case My Container Name is `mattermost-app`
 
-Step 3:Edit With Editor Like `nano`
+Step 3: Edit Config File With Editor Like `nano`
 ```
 sudo nano ./config.json
 ```
