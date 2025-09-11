@@ -1,10 +1,10 @@
 # How to Set Ubuntu apt repository in nexus oss
 
-1:open the sources.list
+Step 1:open the sources.list
 ```
 sudo nano /etc/apt/sources.list
 ```
-2:set this address
+Step 2:set this address
 ```
 deb [trusted=yes] https://registry.nichosting.ir/repository/apt_ubuntu_local/ jammy main
 deb [trusted=yes] https://registry.nichosting.ir/repository/ubuntu_jammy_main_restricted jammy main restricted
@@ -20,7 +20,8 @@ deb [trusted=yes] https://registry.nichosting.ir/repository/ubuntu_jammy-securit
 deb [signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://registry.nichosting.ir/repository/apt_ubuntu_docker_proxy jammy stable
 ```
 
-3:get Certificate With This Command
+Step 3:
+get Certificate With This Command
 ```
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
 ```
@@ -29,16 +30,19 @@ And This Command
 curl -fsSLo kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
 ```
 
-4:Use This Curl Command
+Step 4:
+Use This Curl Command
 ```
 curl -fsSLo kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
 sudo mv kubernetes-archive-keyring.gpg /usr/share/keyrings/
 sudo chmod a+r /usr/share/keyrings/kubernetes-archive-keyring.gpg
 ```
 
-5:use apt update
+Step 5:
+use apt update
 ```
 sudo apt update
 ```
 
-6: ## enjoy
+Step 6: 
+## enjoy
