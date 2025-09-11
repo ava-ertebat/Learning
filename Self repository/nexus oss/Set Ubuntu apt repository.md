@@ -1,4 +1,4 @@
-##How to Set Ubuntu apt repository in nexus oss
+# How to Set Ubuntu apt repository in nexus oss
 
 1:open the sources.list
 ```
