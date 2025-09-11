@@ -44,5 +44,4 @@ use apt update
 sudo apt update
 ```
 
-Step 6: 
 ## enjoy
