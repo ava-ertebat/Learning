@@ -78,7 +78,7 @@ configs:
 -------------------------------
 In This Case `avertebat` Is Tested Name
 
-For YourSelf Replase `avaertebat` With Your name
+For YourSelf Replase `avaertebat` With name You need
 # Edit Config File:
  - Find Container Name With ` sudo docker ps `
  - Copy config File And Edit in ```Host```
