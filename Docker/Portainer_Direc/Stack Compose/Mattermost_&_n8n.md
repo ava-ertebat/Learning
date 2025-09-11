@@ -93,7 +93,7 @@ sudo docker ps
 ```
 Step 2:Copy config File And Edit in Host
 ```
-sudo docker cp mattermost-app:/mattermost/config/config.json ./config.json
+sudo docker cp mattermost_avaertebat:/mattermost/config/config.json ./config.json
 ```
 In this Case My Container Name is `mattermost-app`
 
@@ -103,11 +103,11 @@ sudo nano ./config.json
 ```
 Step 4:Move config File on Host To Container
 ```
-sudo docker cp ./config.json mattermost-app:/mattermost/config/config.json
+sudo docker cp ./config.json mattermost_avaertebat:/mattermost/config/config.json
 ```
 Step 5:
 Find Container Volume Name
 ```
-sudo docker run --rm -v mattermost_mattermost_config:/mattermost/config alpine sh -c "chown -R 2000:2000 /mattermost/config && chmod -R 700 /mattermost/config && chmod -R 644 /mattermost/config/*"
+sudo docker run --rm -v mattermost_config_avaertebat:/mattermost/config alpine sh -c "chown -R 2000:2000 /mattermost/config && chmod -R 700 /mattermost/config && chmod -R 644 /mattermost/config/*"
 ```
 In this Case My Container Volume Name is `mattermost_mattermost_config`
