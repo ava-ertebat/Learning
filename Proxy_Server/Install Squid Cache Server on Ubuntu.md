@@ -1,9 +1,7 @@
 # Install Squid Cache Server on Ubuntu.md
-# ==============================================================================
 # Squid Transparent Proxy Setup Behind MikroTik Router
 # Purpose: Enable HTTP caching for all internet traffic transparently in a company network
 # Author: OpenAI ChatGPT
-# ==============================================================================
 
 # ----------------------------------------
 # 1. System Requirements
