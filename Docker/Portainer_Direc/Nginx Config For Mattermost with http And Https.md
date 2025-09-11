@@ -34,10 +34,11 @@ First, we’ll create a new file in the sites-available directory with the name 
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 }
-
 ```
 
-`For Use with Https and Get Certificate Use This And Continio`
+
+## For Use with Https and Get Certificate Use This And Continio
+
 
 ```
   GNU nano 6.2                                                             /etc/nginx/sites-available/chat.avacore.ir
