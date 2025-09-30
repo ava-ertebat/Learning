@@ -34,7 +34,7 @@ nano Dockerfile
 ```dockerfile
 # از آخرین نسخه پایدار ایمیج رسمی runners به عنوان پایه استفاده می‌کنیم.
 # همیشه نسخه آن را با نسخه n8n که در docker-compose استفاده می‌کنید، یکسان نگه دارید.
-FROM n8nio/runners:1.46.0
+FROM n8nio/runners:1.114.0
 
 # فایل نیازمندی‌های پایتون را به داخل ایمیج کپی می‌کنیم.
 COPY extras.txt /tmp/extras.txt
@@ -123,7 +123,7 @@ docker build -t my-custom-runners:1.46.0 .
 
 ### گام ۳: تنظیمات استک
 
-1.  **Name:** یک نام برای استک خود انتخاب کنید. بهتر است نام مشتری را در آن لحاظ کنید، مثلا: `n8n-sazehertebat`.
+1.  **Name:** یک نام برای استک خود انتخاب کنید. بهتر است نام مشتری را در آن لحاظ کنید، مثلا: `n8n-akherati`.
 2.  **Build method:** گزینه **Web editor** را انتخاب کنید.
 3.  **Web editor:** کل محتوای فایل `docker-compose.yml` زیر را کپی کرده و در این بخش جای‌گذاری کنید.
 
@@ -139,64 +139,64 @@ version: '3.8'
 
 services:
   # ------ سرویس دیتابیس (مشترک برای سرویس‌های این مشتری) ------
-  db_sazehertebat:
+  db_akherati:
     image: postgres:13-alpine
-    container_name: db_sazehertebat
+    container_name: db_akherati
     restart: unless-stopped
     volumes:
-      - postgres_data_sazehertebat:/var/lib/postgresql/data
+      - postgres_data_akherati:/var/lib/postgresql/data
     environment:
-      - POSTGRES_USER=sazehertebat_mm_user
+      - POSTGRES_USER=akherati_mm_user
       - POSTGRES_PASSWORD=YOUR_SECURE_DB_PASSWORD_HERE # ⚠️ رمز عبور دیتابیس را تغییر دهید
-      - POSTGRES_DB=sazehertebat_mattermost_db # دیتابیس اولیه برای mattermost
+      - POSTGRES_DB=akherati_mattermost_db # دیتابیس اولیه برای mattermost
     configs:
-      - source: init_db_script_sazehertebat
+      - source: init_db_script_akherati
         target: /docker-entrypoint-initdb.d/init-db.sql
         mode: 0644
 
   # ------ سرویس Mattermost (اختیاری - بر اساس استک اصلی شما) ------
-  mattermost_sazehertebat:
+  mattermost_akherati:
     image: mattermost/mattermost-team-edition:latest
-    container_name: mattermost_sazehertebat
+    container_name: mattermost_akherati
     restart: unless-stopped
     depends_on:
-      - db_sazehertebat
+      - db_akherati
     ports:
       - "4001:8065"
     volumes:
-      - mattermost_config_sazehertebat:/mattermost/config
-      - mattermost_data_sazehertebat:/mattermost/data
-      - mattermost_logs_sazehertebat:/mattermost/logs
-      - mattermost_plugins_sazehertebat:/mattermost/plugins
-      - mattermost_client_plugins_sazehertebat:/mattermost/client/plugins
+      - mattermost_config_akherati:/mattermost/config
+      - mattermost_data_akherati:/mattermost/data
+      - mattermost_logs_akherati:/mattermost/logs
+      - mattermost_plugins_akherati:/mattermost/plugins
+      - mattermost_client_plugins_akherati:/mattermost/client/plugins
     environment:
       - MM_SQLSETTINGS_DRIVERNAME=postgres
-      - MM_SQLSETTINGS_DATASOURCE=postgres://sazehertebat_mm_user:YOUR_SECURE_DB_PASSWORD_HERE@db_sazehertebat:5432/sazehertebat_mattermost_db?sslmode=disable
-      - MM_SERVICESETTINGS_SITEURL=[https://sazehertebat.avacore.ir](https://sazehertebat.avacore.ir) # ⚠️ آدرس Mattermost
+      - MM_SQLSETTINGS_DATASOURCE=postgres://akherati_mm_user:YOUR_SECURE_DB_PASSWORD_HERE@db_akherati:5432/akherati_mattermost_db?sslmode=disable
+      - MM_SERVICESETTINGS_SITEURL=[https://akherati.avacore.ir](https://akherati.avacore.ir) # ⚠️ آدرس Mattermost
 
   # ------ سرویس اصلی n8n (کارفرما یا Broker) ------
-  n8n_main_sazehertebat:
+  n8n_main_akherati:
     # ❗️نسخه این ایمیج باید با نسخه پایه ایمیج Runner شما یکی باشد
-    image: n8nio/n8n:1.46.0
-    container_name: n8n_main_sazehertebat
+    image: n8nio/n8n:1.114.0
+    container_name: n8n_main_akherati
     restart: unless-stopped
     depends_on:
-      - db_sazehertebat
+      - db_akherati
     ports:
       - "5001:5678"
     environment:
       # --- تنظیمات دیتابیس ---
       - DB_TYPE=postgresdb
-      - DB_POSTGRESDB_HOST=db_sazehertebat
+      - DB_POSTGRESDB_HOST=db_akherati
       - DB_POSTGRESDB_PORT=5432
-      - DB_POSTGRESDB_DATABASE=sazehertebat_n8n_db # دیتابیس n8n
-      - DB_POSTGRESDB_USER=sazehertebat_mm_user
+      - DB_POSTGRESDB_DATABASE=akherati_n8n_db # دیتابیس n8n
+      - DB_POSTGRESDB_USER=akherati_mm_user
       - DB_POSTGRESDB_PASSWORD=YOUR_SECURE_DB_PASSWORD_HERE # ⚠️ همان رمز عبور دیتابیس
       # --- تنظیمات دامنه و پروتکل n8n ---
       - NODE_ENV=production
       - N8N_PROTOCOL=https
-      - N8N_HOST=ai-sazehertebat.avacore.ir # ⚠️ ساب‌دامین مخصوص n8n این مشتری
-      - WEBHOOK_URL=[https://ai-sazehertebat.avacore.ir/](https://ai-sazehertebat.avacore.ir/)
+      - N8N_HOST=ai-akherati.avacore.ir # ⚠️ ساب‌دامین مخصوص n8n این مشتری
+      - WEBHOOK_URL=[https://ai-akherati.avacore.ir/](https://ai-akherati.avacore.ir/)
       
       # ------ تنظیمات حیاتی برای فعال‌سازی Runner ------
       - N8N_RUNNERS_ENABLED=true
@@ -206,44 +206,44 @@ services:
       - N8N_RUNNERS_AUTH_TOKEN=YOUR_SUPER_SECRET_TOKEN_HERE # ⚠️ یک توکن امن و طولانی ایجاد کنید
 
     volumes:
-      - n8n_data_sazehertebat:/home/node/.n8n
+      - n8n_data_akherati:/home/node/.n8n
 
   # ------ سرویس Task Runner (کارگر) ------
-  n8n_task_runners_sazehertebat:
+  n8n_task_runners_akherati:
     # ❗️از ایمیج سفارشی که در بخش اول ساختید استفاده کنید
-    image: my-custom-runners:1.46.0
-    container_name: n8n_task_runners_sazehertebat
+    image: my-custom-runners:1.114.0
+    container_name: n8n_task_runners_akherati
     restart: unless-stopped
     depends_on:
-      - n8n_main_sazehertebat
+      - n8n_main_akherati
     environment:
       # آدرس کانتینر اصلی n8n برای اتصال
-      - N8N_RUNNERS_TASK_BROKER_URI=http://n8n_main_sazehertebat:5679
+      - N8N_RUNNERS_TASK_BROKER_URI=http://n8n_main_akherati:5679
       # توکن امنیتی مشترک (باید با مقدار بالا یکسان باشد)
       - N8N_RUNNERS_AUTH_TOKEN=YOUR_SUPER_SECRET_TOKEN_HERE # ⚠️ همان توکن بالا را وارد کنید
 
 # تعریف Volume‌ها برای نگهداری دائمی داده‌ها
 volumes:
-  postgres_data_sazehertebat:
-  mattermost_config_sazehertebat:
-  mattermost_data_sazehertebat:
-  mattermost_logs_sazehertebat:
-  mattermost_plugins_sazehertebat:
-  mattermost_client_plugins_sazehertebat:
-  n8n_data_sazehertebat:
+  postgres_data_akherati:
+  mattermost_config_akherati:
+  mattermost_data_akherati:
+  mattermost_logs_akherati:
+  mattermost_plugins_akherati:
+  mattermost_client_plugins_akherati:
+  n8n_data_akherati:
 
 # تعریف Config برای ساخت دیتابیس n8n در اولین اجرا
 configs:
-  init_db_script_sazehertebat:
+  init_db_script_akherati:
     content: |
-      CREATE DATABASE sazehertebat_n8n_db;
+      CREATE DATABASE akherati_n8n_db;
 ```
 
 ### گام ۴: ویرایش مقادیر ضروری
 
 **قبل از کلیک روی دکمه Deploy**، مقادیر زیر را مستقیماً در ویرایشگر Portainer ویرایش کنید:
 * `YOUR_SECURE_DB_PASSWORD_HERE`: رمز عبور دیتابیس را با یک رمز امن جایگزین کنید (در ۳ مکان تکرار شده).
-* `N8N_HOST`: ساب‌دامین مخصوص n8n این مشتری را وارد کنید (مثلاً `ai-sazehertebat.avacore.ir`).
+* `N8N_HOST`: ساب‌دامین مخصوص n8n این مشتری را وارد کنید (مثلاً `ai-akherati.avacore.ir`).
 * `WEBHOOK_URL`: آدرس کامل وب‌هوک را وارد کنید (معمولاً همان آدرس `N8N_HOST` است).
 * `YOUR_SUPER_SECRET_TOKEN_HERE`: یک رشته امن و طولانی به عنوان توکن ارتباطی ایجاد کنید و در ۲ مکان جایگزین نمایید.
 
@@ -259,11 +259,11 @@ configs:
 1.  فایل `extras.txt` را ویرایش کرده و کتابخانه جدید را اضافه کنید.
 2.  فایل `n8n-task-runners.json` را ویرایش کرده و نام کتابخانه جدید را به لیست مجازها اضافه کنید.
 3.  با دستور `docker build` (گام ۵ بخش اول) ایمیج را با یک تگ نسخه جدید (مثلاً `my-custom-runners:1.46.1`) دوباره بسازید.
-4.  در Portainer، استک را ویرایش کرده و تگ ایمیج `n8n_task_runners_sazehertebat` را به نسخه جدید تغییر دهید و استک را مجدداً Deploy کنید.
+4.  در Portainer، استک را ویرایش کرده و تگ ایمیج `n8n_task_runners_akherati` را به نسخه جدید تغییر دهید و استک را مجدداً Deploy کنید.
 
 ### راه‌اندازی برای یک مشتری جدید (مثلاً `clientB`)
 1.  **بخش اول (ساخت ایمیج)** نیازی به تکرار ندارد، مگر اینکه مشتری جدید کتابخانه‌های متفاوتی بخواهد.
 2.  در **بخش دوم**، یک استک جدید در Portainer بسازید.
-3.  کل فایل `docker-compose.yml` را کپی کرده و تمام پسوندهای `_sazehertebat` را به `_clientB` تغییر دهید (برای `container_name`, `volumes`, `configs`, و نام سرویس‌ها).
+3.  کل فایل `docker-compose.yml` را کپی کرده و تمام پسوندهای `_akherati` را به `_clientB` تغییر دهید (برای `container_name`, `volumes`, `configs`, و نام سرویس‌ها).
 4.  مقادیر مربوط به دامنه (`N8N_HOST`) و سایر متغیرهای محیطی را برای مشتری جدید تنظیم کنید.
 5.  استک جدید را Deploy کنید.
