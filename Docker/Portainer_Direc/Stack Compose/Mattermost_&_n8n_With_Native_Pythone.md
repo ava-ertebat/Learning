@@ -1,55 +1,82 @@
-# راهنمای کامل راه‌اندازی پکیج مشتری (n8n + Mattermost) با Runner قدرتمند پایتون
+# Production-Ready Deployment Guide: n8n & Mattermost Customer Stack with a Custom Python Runner
 
-این مستند به صورت گام به گام، فرآیند راه‌اندازی یک پکیج کامل و اختصاصی برای هر مشتری را شرح می‌دهد. این پکیج شامل سرویس‌های **n8n**، **Mattermost** و **PostgreSQL** است و n8n در آن به یک Runner سفارشی با قابلیت‌های گسترده پایتون مجهز شده است.
-
-**استراتژی:**
-1.  **ساخت ایمیج یک‌باره:** ابتدا یک ایمیج Runner قدرتمند (Golden Image) با تمام کتابخانه‌های لازم می‌سازیم.
-2.  **استقرار استک کامل:** برای هر مشتری، یک استک کامل شامل هر سه سرویس را با استفاده از این ایمیج Runner راه‌اندازی می‌کنیم.
+This document provides a comprehensive, step-by-step guide for deploying a complete, isolated stack for each customer. The stack includes **n8n**, **Mattermost**, and a **PostgreSQL** database. The n8n service is supercharged with a custom "Golden Image" runner, pre-loaded with an extensive list of Python libraries for Data Science, Social Media, and IT Automation.
 
 ---
 
-## بخش اول: ساخت ایمیج طلایی Runner (یک بار برای همیشه)
+## A. Important Note on Permissions (`sudo`)
 
-این بخش تنها یک بار (یا هر زمان که نیاز به آپدیت اساسی کتابخانه‌ها داشتید) انجام می‌شود.
+Docker commands require root privileges to interact with the Docker daemon. You have two primary methods to handle this:
 
-### گام ۱: آماده‌سازی فایل‌ها
+1.  **Prefix with `sudo` (Default for this guide):** The simplest way is to prepend `sudo` to every `docker` and `docker-compose` command. All commands in this guide will use this format for maximum compatibility.
 
-در سرور خود، پوشه‌ای برای ساخت ایمیج ایجاد کنید (`mkdir golden-runner && cd golden-runner`). سپس سه فایل زیر را در آن بسازید.
+2.  **Add User to `docker` Group (Recommended):** To avoid typing `sudo` every time, you can add your user to the `docker` group. This is a one-time setup.
 
-#### فایل ۱: `Dockerfile` (دستور ساخت پیشرفته)
+    ```bash
+    # Add the current user to the docker group
+    sudo usermod -aG docker ${USER}
 
-```dockerfile
-# همیشه نسخه آن را با نسخه n8n که در docker-compose استفاده می‌کنید، یکسان نگه دارید.
+    # You MUST log out and log back in for this change to take effect.
+    # You can also run the following command to apply the new group membership immediately:
+    newgrp docker
+    ```
+
+After doing this, you can run all `docker` commands without `sudo`.
+
+---
+
+## Part 1: Building the Golden Runner Image (One-Time Setup)
+
+This process creates a single, powerful Docker image that all your customer stacks will share, saving significant disk space and centralizing library management.
+
+### Step 1.1: Prepare the Project Directory
+
+On your server, create a directory to hold the image definition files.
+
+```bash
+mkdir ~/golden-runner
+cd ~/golden-runner
+```
+
+### Step 1.2: Create the Definition Files
+
+We will create the `Dockerfile`, `extras.txt`, and `n8n-task-runners.json` files. The following commands will create and populate them instantly.
+
+```bash
+# Create the Dockerfile
+cat <<EOF > Dockerfile
+# Set the base image. Ensure its version matches the n8n service version.
 FROM n8nio/runners:1.114.0
 
-# به کاربر root سوییچ می‌کنیم تا بتوانیم پکیج‌های سیستمی را نصب کنیم
+# Switch to root user to install system-level dependencies
 USER root
 
-# نصب وابستگی‌های سیستمی مورد نیاز برای کتابخانه‌های پایتون
+# Install system packages required by some Python libraries (e.g., for cryptography, ssh)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libffi-dev \
     libssl-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# به کاربر پیش‌فرض n8n برمی‌گردیم
+# Switch back to the non-privileged node user
 USER node
 
-# نصب مرورگرهای مورد نیاز برای Playwright
+# Install browser binaries required by Playwright
 RUN python -m playwright install --with-deps
 
-# کپی و نصب کتابخانه‌های پایتون
+# Copy the Python requirements file
 COPY extras.txt /tmp/extras.txt
+
+# Install Python libraries using pip
 RUN pip install --no-cache-dir -r /tmp/extras.txt
 
-# کپی فایل تنظیمات launcher
+# Copy the launcher configuration file to grant permissions for the installed libraries
 COPY n8n-task-runners.json /etc/n8n-task-runners.json
-```
+EOF
 
-#### فایل ۲: `extras.txt` (لیست جامع کتابخانه‌ها)
-
-```txt
-# === Data Science & Analysis ===
+# Create the extras.txt file with the list of Python libraries
+cat <<EOF > extras.txt
+# --- Data Science & Analysis ---
 pandas
 numpy
 scipy
@@ -58,7 +85,7 @@ matplotlib
 seaborn
 openpyxl
 
-# === Web Scraping & API Interaction ===
+# --- Web Scraping & API Interaction ---
 requests
 httpx
 beautifulsoup4
@@ -67,7 +94,7 @@ playwright
 scrapy
 python-dotenv
 
-# === IT Automation & DevOps ===
+# --- IT Automation & DevOps ---
 paramiko
 netmiko
 psutil
@@ -79,37 +106,36 @@ azure-identity
 azure-mgmt-compute
 google-api-python-client
 
-# === Databases ===
+# --- Databases ---
 psycopg2-binary
 mysql-connector-python
 redis
 pymongo
 sqlalchemy
 
-# === Web & API Development ===
+# --- Web & API Development ---
 Flask
 FastAPI
 uvicorn
 gunicorn
 
-# === Social Media & Communication ===
+# --- Social Media & Communication ---
 tweepy
 praw
 slack_sdk
 python-telegram-bot
 
-# === Utilities & General Purpose ===
+# --- Utilities & General Purpose ---
 Pillow
 jdatetime
 arrow
 pyjwt
 cryptography
 pydantic
-```
+EOF
 
-#### فایل ۳: `n8n-task-runners.json` (فایل جامع مجوزها)
-
-```json
+# Create the n8n-task-runners.json configuration file
+cat <<EOF > n8n-task-runners.json
 {
   "task-runners": [
     {
@@ -126,156 +152,203 @@ pydantic
     }
   ]
 }
+EOF
 ```
 
-### گام ۲: ساخت ایمیج Docker
+### Step 1.3: Build the Docker Image
 
-حالا ایمیج جامع خود را بسازید.
+Run the build command from within the `~/golden-runner` directory. This may take a considerable amount of time.
 
 ```bash
-# از یک نام و تگ معنادار استفاده کنید
-docker build -t avacore/n8n-python-runner:1.114.0-full .
+# Use a professional naming convention for your image
+sudo docker build -t avacore/n8n-python-runner:1.114.0-full .
 ```
+
+Congratulations! Your powerful, shared runner image is now ready.
 
 ---
 
-## بخش دوم: راه‌اندازی استک کامل مشتری در Portainer
+## Part 2: Deploying the Customer Stack
 
-برای هر مشتری جدید، از این بخش برای راه‌اندازی پکیج کامل و اختصاصی او استفاده کنید.
+For each new customer, you will deploy the complete stack using one of the following methods.
 
-### گام ۱: ورود به Portainer و افزودن استک جدید
+### Method A: Deploying via Portainer UI
 
-وارد حساب کاربری Portainer خود شوید، به بخش **Stacks** بروید و روی **Add stack** کلیک کنید.
+This method is ideal for quick deployments through a graphical interface.
 
-### گام ۲: تنظیمات استک
+1.  **Navigate to Stacks:** Log in to Portainer, and go to **Stacks** from the left menu.
+2.  **Add a New Stack:** Click **Add stack**.
+3.  **Name the Stack:** Give it a unique name, e.g., `stack-akherati`.
+4.  **Use Web Editor:** Paste the entire content of the `docker-compose.yml` (from the template below) into the web editor.
+5.  **Manually Edit Variables:** **Crucially**, before deploying, find and replace all `YOUR_..._HERE` placeholders in the editor with the correct values for the customer.
+6.  **Deploy:** Click **Deploy the stack**.
 
-1.  **Name:** یک نام برای استک مشتری انتخاب کنید، مثلا: `stack-akherati`.
-2.  **Build method:** گزینه **Web editor** را انتخاب کنید.
-3.  **Web editor:** کل محتوای فایل `docker-compose.yml` زیر را کپی کرده و در این بخش جای‌گذاری کنید.
+### Method B: Deploying via Command Line (CLI)
 
-### فایل `docker-compose.yml` (قالب کامل برای هر مشتری)
+This method is more robust, secure (by separating secrets), and easily automated.
+
+1.  **Create a Directory:** For each customer, create a dedicated directory to hold their configuration.
+
+    ```bash
+    # Replace 'akherati' with the actual customer's name
+    mkdir -p ~/stacks/akherati
+    cd ~/stacks/akherati
+    ```
+
+2.  **Create the `docker-compose.yml` file:** Create the file and paste the template content into it. **Note:** This version uses `${VARIABLES}` which will be read from the `.env` file.
+
+    ```bash
+    # This command creates the file and opens it for editing
+    nano docker-compose.yml
+    ```
+
+3.  **Create the `.env` file for Secrets:** This file will store all your secrets and variables, keeping your `docker-compose.yml` clean. **This file should never be committed to a public git repository.**
+
+    ```bash
+    # This command creates the .env file and opens it for editing
+    nano .env
+    ```
+    Paste the following content into the `.env` file and fill in the values for your customer:
+
+    ```env
+    # --- General Customer Identifier ---
+    CUSTOMER_TAG=akherati
+
+    # --- PostgreSQL Credentials ---
+    POSTGRES_USER=akherati_mm_user
+    POSTGRES_PASSWORD=YOUR_VERY_SECURE_DATABASE_PASSWORD
+
+    # --- Mattermost Configuration ---
+    MATTERMOST_SITE_URL=[https://akherati.avacore.ir](https://akherati.avacore.ir)
+    MATTERMOST_PORT=4001
+
+    # --- n8n Configuration ---
+    N8N_HOST=ai-akherati.avacore.ir
+    N8N_PORT=5001
+
+    # --- Shared Secret for n8n Runner ---
+    RUNNERS_AUTH_TOKEN=YOUR_SUPER_LONG_AND_SECRET_RUNNER_TOKEN
+    ```
+
+4.  **Launch the Stack:** From inside the `~/stacks/akherati` directory, run the following command:
+
+    ```bash
+    # This will start all services in the background
+    sudo docker-compose up -d
+    ```
+
+5.  **Manage the Stack (CLI):**
+    * To stop the services: `sudo docker-compose down`
+    * To view logs: `sudo docker-compose logs -f`
+    * To update images and restart: `sudo docker-compose pull && sudo docker-compose up -d`
+
+---
+
+### Master `docker-compose.yml` Template
+
+Use this content for both **Method A (Portainer)** and **Method B (CLI)**.
 
 ```yaml
 version: '3.8'
 
+# This template is designed for a single customer and includes all necessary services.
+# When using the CLI method, it reads variables from a .env file.
+# When using Portainer, you must manually replace the ${VARIABLES} or YOUR_..._HERE placeholders.
+
 services:
-  # ------ سرویس دیتابیس (مشترک برای سرویس‌های این مشتری) ------
-  db_akherati:
+  # --- PostgreSQL Database Service ---
+  db:
     image: postgres:13-alpine
-    container_name: db_akherati
+    container_name: db_${CUSTOMER_TAG:-akherati}
     restart: unless-stopped
     volumes:
-      - postgres_data_akherati:/var/lib/postgresql/data
+      - postgres_data_${CUSTOMER_TAG:-akherati}:/var/lib/postgresql/data
     environment:
-      - POSTGRES_USER=akherati_mm_user
-      - POSTGRES_PASSWORD=YOUR_SECURE_DB_PASSWORD_HERE
-      - POSTGRES_DB=akherati_mattermost_db
+      - POSTGRES_USER=${POSTGRES_USER:-akherati_mm_user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-YOUR_SECURE_DB_PASSWORD_HERE}
+      - POSTGRES_DB=${CUSTOMER_TAG:-akherati}_mattermost_db # Initial DB for Mattermost
     configs:
-      - source: init_db_script_akherati
+      - source: init_db_script_${CUSTOMER_TAG:-akherati}
         target: /docker-entrypoint-initdb.d/init-db.sql
         mode: 0644
 
-  # ------ سرویس Mattermost ------
-  mattermost_akherati:
+  # --- Mattermost Service ---
+  mattermost:
     image: mattermost/mattermost-team-edition:latest
-    container_name: mattermost_akherati
+    container_name: mattermost_${CUSTOMER_TAG:-akherati}
     restart: unless-stopped
     depends_on:
-      - db_akherati
+      - db
     ports:
-      - "4001:8065"
+      - "${MATTERMOST_PORT:-4001}:8065"
     volumes:
-      - mattermost_config_akherati:/mattermost/config
-      - mattermost_data_akherati:/mattermost/data
-      - mattermost_logs_akherati:/mattermost/logs
-      - mattermost_plugins_akherati:/mattermost/plugins
-      - mattermost_client_plugins_akherati:/mattermost/client/plugins
+      - mattermost_config_${CUSTOMER_TAG:-akherati}:/mattermost/config
+      - mattermost_data_${CUSTOMER_TAG:-akherati}:/mattermost/data
+      - mattermost_logs_${CUSTOMER_TAG:-akherati}:/mattermost/logs
+      - mattermost_plugins_${CUSTOMER_TAG:-akherati}:/mattermost/plugins
+      - mattermost_client_plugins_${CUSTOMER_TAG:-akherati}:/mattermost/client/plugins
     environment:
       - MM_SQLSETTINGS_DRIVERNAME=postgres
-      - MM_SQLSETTINGS_DATASOURCE=postgres://akherati_mm_user:YOUR_SECURE_DB_PASSWORD_HERE@db_akherati:5432/akherati_mattermost_db?sslmode=disable
-      - MM_SERVICESETTINGS_SITEURL=[https://akherati.avacore.ir](https://akherati.avacore.ir)
+      - MM_SQLSETTINGS_DATASOURCE=postgres://${POSTGRES_USER:-akherati_mm_user}:${POSTGRES_PASSWORD:-YOUR_SECURE_DB_PASSWORD_HERE}@db_${CUSTOMER_TAG:-akherati}:5432/${CUSTOMER_TAG:-akherati}_mattermost_db?sslmode=disable
+      - MM_SERVICESETTINGS_SITEURL=${MATTERMOST_SITE_URL:-[https://akherati.avacore.ir](https://akherati.avacore.ir)}
 
-  # ------ سرویس اصلی n8n (کارفرما یا Broker) ------
-  n8n_main_akherati:
+  # --- n8n Main Service (Broker) ---
+  n8n-main:
     image: n8nio/n8n:1.114.0
-    container_name: n8n_main_akherati
+    container_name: n8n_main_${CUSTOMER_TAG:-akherati}
     restart: unless-stopped
     depends_on:
-      - db_akherati
+      - db
     ports:
-      - "5001:5678"
+      - "${N8N_PORT:-5001}:5678"
     environment:
       - DB_TYPE=postgresdb
-      - DB_POSTGRESDB_HOST=db_akherati
+      - DB_POSTGRESDB_HOST=db_${CUSTOMER_TAG:-akherati}
       - DB_POSTGRESDB_PORT=5432
-      - DB_POSTGRESDB_DATABASE=akherati_n8n_db
-      - DB_POSTGRESDB_USER=akherati_mm_user
-      - DB_POSTGRESDB_PASSWORD=YOUR_SECURE_DB_PASSWORD_HERE
+      - DB_POSTGRESDB_DATABASE=${CUSTOMER_TAG:-akherati}_n8n_db
+      - DB_POSTGRESDB_USER=${POSTGRES_USER:-akherati_mm_user}
+      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD:-YOUR_SECURE_DB_PASSWORD_HERE}
       - NODE_ENV=production
       - N8N_PROTOCOL=https
-      - N8N_HOST=ai-akherati.avacore.ir
-      - WEBHOOK_URL=[https://ai-akherati.avacore.ir/](https://ai-akherati.avacore.ir/)
+      - N8N_HOST=${N8N_HOST:-ai-akherati.avacore.ir}
+      - WEBHOOK_URL=https://${N8N_HOST:-ai-akherati.avacore.ir}/
       - N8N_RUNNERS_ENABLED=true
       - N8N_RUNNERS_MODE=external
       - N8N_RUNNERS_BROKER_LISTEN_ADDRESS=0.0.0.0
       - N8N_NATIVE_PYTHON_RUNNER=true
-      - N8N_RUNNERS_AUTH_TOKEN=YOUR_SUPER_SECRET_TOKEN_HERE
+      - N8N_RUNNERS_AUTH_TOKEN=${RUNNERS_AUTH_TOKEN:-YOUR_SUPER_SECRET_TOKEN_HERE}
     volumes:
-      - n8n_data_akherati:/home/node/.n8n
+      - n8n_data_${CUSTOMER_TAG:-akherati}:/home/node/.n8n
 
-  # ------ سرویس Task Runner (کارگر) ------
-  n8n_task_runners_akherati:
+  # --- n8n Task Runner Service (Worker) ---
+  n8n-runners:
     image: avacore/n8n-python-runner:1.114.0-full
-    container_name: n8n_task_runners_akherati
+    container_name: n8n_runners_${CUSTOMER_TAG:-akherati}
     restart: unless-stopped
     depends_on:
-      - n8n_main_akherati
+      - n8n-main
     environment:
-      - N8N_RUNNERS_TASK_BROKER_URI=http://n8n_main_akherati:5679
-      - N8N_RUNNERS_AUTH_TOKEN=YOUR_SUPER_SECRET_TOKEN_HERE
-    # --- هشدار امنیتی: برای استفاده از کتابخانه docker ---
+      - N8N_RUNNERS_TASK_BROKER_URI=http://n8n-main:5679
+      - N8N_RUNNERS_AUTH_TOKEN=${RUNNERS_AUTH_TOKEN:-YOUR_SUPER_SECRET_TOKEN_HERE}
+    # Security Warning: To use the 'docker' Python library inside this container,
+    # you must mount the Docker socket. This has significant security implications.
+    # Uncomment the following lines only if you fully trust the code being executed.
     # volumes:
     #   - /var/run/docker.sock:/var/run/docker.sock
 
-# تعریف Volume‌ها برای نگهداری دائمی داده‌ها
+# --- Named Volumes Definition ---
 volumes:
-  postgres_data_akherati:
-  mattermost_config_akherati:
-  mattermost_data_akherati:
-  mattermost_logs_akherati:
-  mattermost_plugins_akherati:
-  mattermost_client_plugins_akherati:
-  n8n_data_akherati:
+  postgres_data_${CUSTOMER_TAG:-akherati}: {}
+  mattermost_config_${CUSTOMER_TAG:-akherati}: {}
+  mattermost_data_${CUSTOMER_TAG:-akherati}: {}
+  mattermost_logs_${CUSTOMER_TAG:-akherati}: {}
+  mattermost_plugins_${CUSTOMER_TAG:-akherati}: {}
+  mattermost_client_plugins_${CUSTOMER_TAG:-akherati}: {}
+  n8n_data_${CUSTOMER_TAG:-akherati}: {}
 
-# تعریف Config برای ساخت دیتابیس n8n در اولین اجرا
+# --- Configs Definition for DB Initialization ---
 configs:
-  init_db_script_akherati:
+  init_db_script_${CUSTOMER_TAG:-akherati}:
     content: |
-      CREATE DATABASE akherati_n8n_db;
+      CREATE DATABASE ${CUSTOMER_TAG:-akherati}_n8n_db;
 ```
-
-### گام ۳: ویرایش مقادیر ضروری و استقرار
-
-**قبل از کلیک روی دکمه Deploy**، مقادیر زیر را مستقیماً در ویرایشگر Portainer ویرایش کنید:
-* `YOUR_SECURE_DB_PASSWORD_HERE`: رمز عبور دیتابیس را با یک رمز امن جایگزین کنید (در ۳ مکان تکرار شده).
-* `MM_SERVICESETTINGS_SITEURL`: آدرس کامل Mattermost مشتری را وارد کنید.
-* `N8N_HOST`: ساب‌دامین مخصوص n8n این مشتری را وارد کنید.
-* `WEBHOOK_URL`: آدرس کامل وب‌هوک n8n را وارد کنید.
-* `YOUR_SUPER_SECRET_TOKEN_HERE`: یک رشته امن و طولانی به عنوان توکن ارتباطی ایجاد کنید و در ۲ مکان جایگزین نمایید.
-
-پس از اطمینان از صحت مقادیر، روی دکمه **Deploy the stack** کلیک کنید.
-
----
-
-## نگهداری و بروزرسانی
-
-### افزودن کتابخانه پایتون جدید به همه مشتریان
-1.  فایل‌های `extras.txt` و `n8n-task-runners.json` را در پوشه `golden-runner` ویرایش کنید.
-2.  با دستور `docker build` ایمیج را با یک تگ نسخه جدید (مثلاً `avacore/n8n-python-runner:1.114.0-full-v2`) دوباره بسازید.
-3.  در Portainer، استک هر مشتری را ویرایش کرده، تگ ایمیج `n8n_task_runners_...` را به نسخه جدید تغییر دهید و استک را مجدداً Deploy کنید.
-
-### راه‌اندازی برای یک مشتری جدید (مثلاً `clientB`)
-1.  در **بخش دوم**، یک استک جدید در Portainer بسازید.
-2.  کل فایل `docker-compose.yml` را کپی کرده و تمام پسوندهای `_akherati` را به `_clientB` تغییر دهید.
-3.  مقادیر مربوط به دامنه‌ها، پورت‌ها و سایر متغیرهای محیطی را برای مشتری جدید تنظیم کنید.
-4.  استک جدید را Deploy کنید.
