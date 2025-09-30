@@ -46,33 +46,26 @@ We will create the `Dockerfile`, `extras.txt`, and `n8n-task-runners.json` files
 ```bash
 # Create the Dockerfile
 cat <<EOF > Dockerfile
-# Set the base image. Ensure its version matches the n8n service version.
+# Step 1: Use the official and ONLY available runner image (Alpine-based)
 FROM n8nio/runners:1.114.0
 
-# Switch to root user to install system-level dependencies
+# Step 2: Switch to root user for ALL installation and setup steps
 USER root
 
-# Install system packages required by some Python libraries (e.g., for cryptography, ssh)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    libffi-dev \
-    libssl-dev \
-    && rm -rf /var/lib/apt/lists/*
+# Step 3: Install system packages using apk for Alpine
+RUN apk update && apk add --no-cache build-base libffi-dev openssl-dev
 
-# Switch back to the non-privileged node user
-USER node
-
-# Install browser binaries required by Playwright
-RUN python -m playwright install --with-deps
-
-# Copy the Python requirements file
+# Step 4: Copy the Python requirements file
 COPY extras.txt /tmp/extras.txt
 
-# Install Python libraries using pip
+# Step 5: Install all Python libraries from the list (as root)
 RUN pip install --no-cache-dir -r /tmp/extras.txt
 
-# Copy the launcher configuration file to grant permissions for the installed libraries
+# Step 6: Copy the launcher configuration file
 COPY n8n-task-runners.json /etc/n8n-task-runners.json
+
+# Step 7: NOW, at the very end, switch to the non-privileged user for runtime
+USER node
 EOF
 
 # Create the extras.txt file with the list of Python libraries
@@ -91,7 +84,6 @@ requests
 httpx
 beautifulsoup4
 lxml
-playwright
 scrapy
 python-dotenv
 
