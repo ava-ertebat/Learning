@@ -1,4 +1,5 @@
-# Production-Ready Deployment Guide: n8n & Mattermost Customer Stack with a Custom Python Runner
+# Production-Ready Deployment Guide: n8n & Mattermost Stack
+## with a Custom Python Runner
 
 This document provides a comprehensive, step-by-step guide for deploying a complete, isolated stack for each customer. The stack includes **n8n**, **Mattermost**, and a **PostgreSQL** database. The n8n service is supercharged with a custom "Golden Image" runner, pre-loaded with an extensive list of Python libraries for Data Science, Social Media, and IT Automation.
 
