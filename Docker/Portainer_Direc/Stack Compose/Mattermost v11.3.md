@@ -27,7 +27,7 @@ version: '3.8'
 
 services:
   db_avaertebat:
-    # طبق جدول نسخه ۱۱.۳، پستگرس ۱۴ توصیه شده است
+    # طبق جدول نسخه ۱۱.۳، پستگرس 16 توصیه شده است
     image: docker.arvancloud.ir/postgres:16-alpine
     container_name: db_avaertebat
     restart: unless-stopped
