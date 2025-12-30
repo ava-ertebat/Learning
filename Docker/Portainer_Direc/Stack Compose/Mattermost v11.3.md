@@ -26,89 +26,85 @@ It includes critical configuration fixes for **PostgreSQL 16 compatibility**, **
 version: '3.8'
 
 services:
-  postgres:
-    # Mattermost v11.x requires PostgreSQL 16+
-    image: postgres:16-alpine
-    container_name: mattermost-db
+  db_avaertebat:
+    # طبق جدول نسخه ۱۱.۳، پستگرس ۱۴ توصیه شده است
+    image: docker.arvancloud.ir/postgres:16-alpine
+    container_name: db_avaertebat
     restart: unless-stopped
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data_avaertebat:/var/lib/postgresql/data
     environment:
-      - POSTGRES_USER=mmuser
-      - POSTGRES_PASSWORD=Secure_DB_Password
-      - POSTGRES_DB=mattermost
-    # Healthcheck ensures DB is ready before Mattermost starts
+      - POSTGRES_USER=avaertebat_mm_user
+      - POSTGRES_PASSWORD=Swordfish641@
+      - POSTGRES_DB=avaertebat_mattermost_db
+    # اضافه کردن هلث‌چک برای اطمینان از سلامت دیتابیس
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U mmuser -d mattermost"]
+      test: ["CMD-SHELL", "pg_isready -U avaertebat_mm_user -d avaertebat_mattermost_db"]
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - mattermost-net
 
-  mattermost:
-    image: mattermost/mattermost-team-edition:release-11.3
-    container_name: mattermost-app
+  mattermost_avaertebat:
+    # استفاده از نسخه ۱۱.۳ درخواستی شما
+    image: docker.arvancloud.ir/mattermost/mattermost-team-edition:release-11.3
+    container_name: mattermost_avaertebat
     restart: unless-stopped
     depends_on:
-      postgres:
+      db_avaertebat:
         condition: service_healthy
     ports:
+      # پورت استاندارد را مپ کردیم
       - "8065:8065"
     volumes:
-      # Named volumes allow Portainer/Docker to manage permissions automatically
-      - mattermost_config:/mattermost/config:rw
-      - mattermost_data:/mattermost/data:rw
-      - mattermost_logs:/mattermost/logs:rw
-      - mattermost_plugins:/mattermost/plugins:rw
-      - mattermost_client_plugins:/mattermost/client/plugins:rw
+      - mattermost_config_avaertebat:/mattermost/config:rw
+      - mattermost_data_avaertebat:/mattermost/data:rw
+      - mattermost_logs_avaertebat:/mattermost/logs:rw
+      - mattermost_plugins_avaertebat:/mattermost/plugins:rw
+      - mattermost_client_plugins_avaertebat:/mattermost/client/plugins:rw
     environment:
-      # --- Database Connection ---
       - MM_SQLSETTINGS_DRIVERNAME=postgres
-      # Use %40 instead of @ if your password contains an @ symbol
-      - MM_SQLSETTINGS_DATASOURCE=postgres://mmuser:Secure_DB_Password@postgres:5432/mattermost?sslmode=disable&connect_timeout=10
+      # نکته مهم: کاراکتر @ در پسورد به %40 تبدیل شد تا لینک خراب نشود
+      - MM_SQLSETTINGS_DATASOURCE=postgres://avaertebat_mm_user:Swordfish641%40@db_avaertebat:5432/avaertebat_mattermost_db?sslmode=disable&connect_timeout=10
 
-      # --- Site URL Configuration ---
-      - MM_SERVICESETTINGS_SITEURL=[https://chat.example.com](https://chat.example.com)
+      # --- تنظیمات آدرس ---
+      - MM_SERVICESETTINGS_SITEURL=https://chat.avacore.ir
       
-      # --- CRITICAL FIX: WebSocket URL ---
-      # Explicitly setting WSS prevents "Refresh Loops" behind Nginx
-      - MM_SERVICESETTINGS_WEBSOCKETURL=wss://chat.example.com
-      
-      # --- Proxy & Security Settings ---
-      - MM_SERVICESETTINGS_USELETSENCRYPT=false
-      - MM_SERVICESETTINGS_FORWARD80TO443=false
-      # Trust headers from the Nginx container
+      # --- تنظیمات حیاتی برای Nginx (جلوگیری از لوپ رفرش) ---
+      # این دو خط در داکیومنت قدیمی نبود اما برای نسخه جدید و انجین‌اکس الزامی است
+      - MM_SERVICESETTINGS_WEBSOCKETURL=wss://chat.avacore.ir
       - MM_SERVICESETTINGS_TRUSTEDPROXYIP=0.0.0.0/0
-      - MM_SERVICESETTINGS_ALLOWCORSFROM=[https://chat.example.com](https://chat.example.com)
-      # Force Secure Cookies (Required for modern browsers on HTTPS)
+      
+      # --- تنظیمات امنیتی کوکی (چون HTTPS دارید) ---
       - MM_SERVICESETTINGS_SESSIONCOOKIESECURE=true
       
-      # --- Initial Admin Account (Optional) ---
-      # If the setup wizard fails, this creates the admin user automatically
-      - MM_ADMIN_USERNAME=admin-user
-      - MM_ADMIN_PASSWORD=Secure_Admin_Password
+      # یوزر ادمین اولیه
+      - MM_ADMIN_USERNAME=ava-ertebat
+      - MM_ADMIN_PASSWORD=Swordfish641@
       
-      # --- Optimization ---
-      # Prevents startup crashes by disabling automatic pre-packaged plugin loading
-      - MM_PLUGINSETTINGS_AUTOMATICPREPACKAGEDPLUGINS=false
+      # --- تنظیمات پلاگین‌ها (اصلاح شده برای رفع خطای آپلود) ---
       - MM_PLUGINSETTINGS_ENABLE=true
+      # این خط اجازه می‌دهد فایل را از کامپیوتر خودت آپلود کنی:
+      - MM_PLUGINSETTINGS_ENABLEUPLOADS=true
+      # این خط بررسی امضای دیجیتال را برای پلاگین‌های دستی خاموش می‌کند تا خطا ندهد:
+      - MM_PLUGINSETTINGS_REQUIREPLUGINSIGNATURE=false
       
-    networks:
-      - mattermost-net
-
-networks:
-  mattermost-net:
-    driver: bridge
+      # تنظیمات قبلی برای جلوگیری از هنگ کردن
+      - MM_PLUGINSETTINGS_AUTOMATICPREPACKAGEDPLUGINS=true
+      - MM_PLUGINSETTINGS_ENABLEMARKETPLACE=false
 
 volumes:
-  postgres_data:
-  mattermost_config:
-  mattermost_data:
-  mattermost_logs:
-  mattermost_plugins:
-  mattermost_client_plugins:
+  postgres_data_avaertebat:
+  mattermost_config_avaertebat:
+  mattermost_data_avaertebat:
+  mattermost_logs_avaertebat:
+  mattermost_plugins_avaertebat:
+  mattermost_client_plugins_avaertebat:
 ```
+## This Details just for testing in here and you most to chage them
+### chat.avacore.ir
+### Username ava-ertebat 
+### Password:Swordfish641@ and Swordfish64140% 
+
 
 5.  Click **Deploy the stack**.
 
