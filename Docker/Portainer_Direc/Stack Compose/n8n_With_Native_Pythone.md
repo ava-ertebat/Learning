@@ -166,6 +166,7 @@ services:
       - N8N_RUNNERS_TASK_BROKER_URI=http://n8n:5679
       - N8N_RUNNERS_AUTH_TOKEN=MySecureSecretKey123
       - N8N_RUNNERS_LAUNCHER_LOG_LEVEL=debug
+      - N8N_RUNNERS_AUTO_SHUTDOWN_TIMEOUT=0
       
       # تنظیمات پروکسی (در صورت نیاز آنکامنت کنید)
       # - HTTP_PROXY=http://ip:port
