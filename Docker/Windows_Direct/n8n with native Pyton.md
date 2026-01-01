@@ -178,6 +178,7 @@ services:
       - N8N_RUNNERS_TASK_BROKER_URI=http://n8n:5679
       - N8N_RUNNERS_AUTH_TOKEN=MySecretPassword123
       - N8N_RUNNERS_LAUNCHER_LOG_LEVEL=debug
+      - N8N_RUNNERS_AUTO_SHUTDOWN_TIMEOUT=0
     depends_on:
       - n8n
     restart: always
