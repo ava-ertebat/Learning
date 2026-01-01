@@ -76,6 +76,17 @@ FROM docker.arvancloud.ir/n8nio/runners:latest
 USER root
 
 # نصب کتابخانه‌های پایتون (لیست خود را اینجا ویرایش کنید)
+# نصب کتابخانه‌های کاربردی پایتون (بدون هوش مصنوعی سنگین)
+# لیست:
+# requests, httpx -> ارتباطات شبکه
+# pandas, openpyxl -> مدیریت داده و اکسل
+# beautifulsoup4, lxml -> پردازش HTML و XML
+# mysql-connector-python, sqlalchemy -> دیتابیس
+# paramiko -> مدیریت سرور (SSH/SFTP)
+# pillow -> پردازش تصویر
+# pyjwt, cryptography -> امنیت
+# python-dateutil, pytz -> مدیریت زمان و تاریخ (برای اسکجول‌ها)
+
 RUN cd /opt/runners/task-runner-python && \
     uv pip install requests pandas numpy
 
