@@ -32,7 +32,7 @@ n8n-deployment/
 محتوای فایل `python-runner/n8n-task-runners.json`:
 
 ### سپس با این دستور فایل متنی برای ایجاد تنظیمات را ایجاد کنید
-sudo nano n8n-task-runners.json
+'sudo nano n8n-task-runners.json'
 ```json
 {
   "task-runners": [
@@ -67,8 +67,11 @@ sudo nano n8n-task-runners.json
 
 ---
 
+### نکته: برای ذخیره متن های نوشته شده در 'nano' باید از کلید ترکیبی CTRL+X استفاده بکنید و سپس کلید y را فشار دهید که متن نوشته شده ذخیره شود.
+
+
 ## 🐳 3. ساخت Dockerfile سفارشی
-sudo nano Dockerfile
+'sudo nano Dockerfile'
 
 برای نصب کتابخانه‌های اضافی پایتون (مثل `requests`, `pandas`, `numpy`) باید ایمیج رسمی را اکستند کنیم.
 
