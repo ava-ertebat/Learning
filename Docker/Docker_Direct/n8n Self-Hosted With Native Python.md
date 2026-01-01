@@ -85,7 +85,16 @@ USER root
 
 # 1. نصب پکیج‌های مورد نیاز پایتون ، میتوانید هر بسته ای که مد نظر دارید را الان و یا حتی بعدا به این لیست اضافه کنید
 # از uv برای سرعت بالاتر استفاده می‌شود
-RUN cd /opt/runners/task-runner-python && uv pip install requests
+# requests, httpx -> ارتباطات شبکه
+# pandas, openpyxl -> مدیریت داده و اکسل
+# beautifulsoup4, lxml -> پردازش HTML و XML
+# mysql-connector-python, sqlalchemy -> دیتابیس
+# paramiko -> مدیریت سرور (SSH/SFTP)
+# pillow -> پردازش تصویر
+# pyjwt, cryptography -> امنیت
+# python-dateutil, pytz -> مدیریت زمان و تاریخ (برای اسکجول‌ها)
+
+RUN cd /opt/runners/task-runner-python && uv pip install requests pandas numpy
 
 # 2. کپی کردن فایل کانفیگ صحیح به مسیر پیش‌فرض لانچر
 # مسیر پیش‌فرض در ایمیج اصلی /etc/n8n-task-runners.json است
