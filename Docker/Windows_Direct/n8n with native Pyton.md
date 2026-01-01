@@ -94,6 +94,15 @@ USER root
 
 # نصب کتابخانه‌های پایتون (لیست دلخواه خود را اینجا ویرایش کنید)
 # نکته: برای نصب چندین پکیج از فاصله استفاده کنید (مثلا: requests pandas numpy)
+# requests, httpx -> ارتباطات شبکه
+# pandas, openpyxl -> مدیریت داده و اکسل
+# beautifulsoup4, lxml -> پردازش HTML و XML
+# mysql-connector-python, sqlalchemy -> دیتابیس
+# paramiko -> مدیریت سرور (SSH/SFTP)
+# pillow -> پردازش تصویر
+# pyjwt, cryptography -> امنیت
+# python-dateutil, pytz -> مدیریت زمان و تاریخ (برای اسکجول‌ها)
+
 RUN cd /opt/runners/task-runner-python && \
     uv pip install requests pandas numpy
 
